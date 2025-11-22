@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources: 
+  SGRDS:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Allow http to client host
+        VpcId: !ImportValue VPC
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 3306
+            ToPort: 3306
+            CidrIp: 20.2.2.0/24
+  myDBSubnetGroup: 
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: it should not be publicly accessible
+      SubnetIds: 
+        - !ImportValue PrivateSubnet1
+        - !ImportValue PrivateSubnet2
+      Tags: 
+        - Key: mykey
+          Value: lks_db_subnet
+
+  RDSDBInstance:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      DBInstanceIdentifier: lks-canaza-rds-db
+      DBName: technords
+      AllocatedStorage: 20
+      StorageType: gp2
+      MultiAZ: false
+      DBInstanceClass: db.t4g.micro
+      DBSubnetGroupName: !Ref myDBSubnetGroup
+      Engine: mysql
+      EngineVersion: 8.0.43
+      LicenseModel: general-public-license  
+      MasterUsername: admin
+      MasterUserPassword: Technobrain2025!
+      PubliclyAccessible: false
+      VPCSecurityGroups:
+        - !Ref SGRDS
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    
